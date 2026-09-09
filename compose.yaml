@@ -1,0 +1,36 @@
+services:
+  ics-merger:
+    build:
+      context: .
+    image: ics-merger:local
+    restart: unless-stopped
+    init: true
+    user: "${ICS_MERGER_UID:-1000}:${ICS_MERGER_GID:-1000}"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /config/config.yaml
+        read_only: false
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./secrets
+        target: /config/secrets
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./data
+        target: /config/data
+        bind:
+          create_host_path: false
+    env_file: ./secrets/providers.env
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

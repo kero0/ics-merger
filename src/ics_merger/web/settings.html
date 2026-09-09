@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Calendar settings</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <link rel="stylesheet" href="/assets/settings.css">
+  <script src="/assets/settings.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Calendar home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>Calendar</span>
+    </a>
+    <nav class="actions" aria-label="Settings actions">
+      <a class="today-button nav-link" href="/">Calendar</a>
+      <button class="download-button" id="save" type="submit" form="settings-form">Save changes</button>
+    </nav>
+  </header>
+
+  <main class="settings-main">
+    <section class="settings-heading">
+      <div>
+        <p class="eyebrow">Configuration</p>
+        <h1>Settings</h1>
+      </div>
+      <p class="save-state" id="save-state" role="status">Loading</p>
+    </section>
+
+    <div class="notice" id="restart-notice" hidden>
+      Restart the container to apply bind host or port changes.
+    </div>
+    <div class="notice error-notice" id="settings-error" role="alert" hidden></div>
+
+    <form id="settings-form">
+      <section class="settings-section" aria-labelledby="general-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">Runtime</p><h2 id="general-title">General</h2></div>
+        </div>
+        <div class="field-grid">
+          <label><span>Future horizon</span><input id="future-horizon" type="number" min="1" max="366" required><small>Days</small></label>
+          <label class="toggle-field"><input id="include-free-time" type="checkbox"><span>Insert free time</span></label>
+          <label><span>Public URL</span><input id="public-base-url" type="url" required></label>
+          <label><span>Bind host</span><input id="host" type="text" required></label>
+          <label><span>Bind port</span><input id="port" type="number" min="1" max="65535" required></label>
+          <label><span>Credential env file</span><input id="env-file" type="text" placeholder="secrets/providers.env"></label>
+          <label><span>Token file</span><input id="token-file" type="text" required></label>
+        </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="remote-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">Subscriptions</p><h2 id="remote-title">Remote ICS</h2></div>
+          <button class="secondary-button" type="button" data-add="remote">Add calendar</button>
+        </div>
+        <div class="calendar-list" id="remote-calendars"></div>
+        <details>
+          <summary>Network policy</summary>
+          <div class="field-grid policy-grid">
+            <label class="toggle-field"><input id="allow-private-networks" type="checkbox"><span>Allow private networks</span></label>
+            <label><span>Maximum response bytes</span><input id="max-response-bytes" type="number" min="1" required></label>
+            <label><span>Connect timeout</span><input id="connect-timeout" type="number" min="0.1" step="0.1" required><small>Seconds</small></label>
+            <label><span>Read timeout</span><input id="read-timeout" type="number" min="0.1" step="0.1" required><small>Seconds</small></label>
+            <label><span>Write timeout</span><input id="write-timeout" type="number" min="0.1" step="0.1" required><small>Seconds</small></label>
+            <label><span>Pool timeout</span><input id="pool-timeout" type="number" min="0.1" step="0.1" required><small>Seconds</small></label>
+          </div>
+        </details>
+      </section>
+
+      <section class="settings-section provider-section" aria-labelledby="google-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">Provider</p><h2 id="google-title">Google Calendar</h2></div>
+          <label class="switch"><input id="google-enabled" type="checkbox"><span>Enabled</span></label>
+        </div>
+        <div class="provider-body" id="google-body">
+          <div class="provider-bar">
+            <span class="provider-status" id="google-status">Not connected</span>
+            <div class="provider-actions">
+              <button class="secondary-button" id="google-sign-in" type="button">Sign in</button>
+              <button class="danger-button" id="google-sign-out" type="button">Sign out</button>
+              <button class="secondary-button" type="button" data-add="google">Add calendar</button>
+            </div>
+          </div>
+          <div class="calendar-list" id="google-calendars"></div>
+        </div>
+      </section>
+
+      <section class="settings-section provider-section" aria-labelledby="microsoft-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">Provider</p><h2 id="microsoft-title">Microsoft 365</h2></div>
+          <label class="switch"><input id="microsoft-enabled" type="checkbox"><span>Enabled</span></label>
+        </div>
+        <div class="provider-body" id="microsoft-body">
+          <div class="field-grid tenant-field">
+            <label><span>Tenant</span><input id="microsoft-tenant" type="text" required></label>
+          </div>
+          <div class="provider-bar">
+            <span class="provider-status" id="microsoft-status">Not connected</span>
+            <div class="provider-actions">
+              <button class="secondary-button" id="microsoft-sign-in" type="button">Sign in</button>
+              <button class="danger-button" id="microsoft-sign-out" type="button">Sign out</button>
+              <button class="secondary-button" type="button" data-add="microsoft">Add calendar</button>
+            </div>
+          </div>
+          <div class="calendar-list" id="microsoft-calendars"></div>
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <template id="calendar-row-template">
+    <div class="calendar-row">
+      <label><span>Name</span><input data-field="name" type="text" required></label>
+      <label class="calendar-value"><span class="value-label">Calendar</span><input data-field="value" type="text" required></label>
+      <label class="ttl-field"><span>Refresh</span><input data-field="ttl_seconds" type="number" min="1" step="1" required><small>Seconds</small></label>
+      <button class="remove-button" type="button" title="Remove calendar" aria-label="Remove calendar">&#215;</button>
+    </div>
+  </template>
+</body>
+</html>

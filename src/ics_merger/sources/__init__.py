@@ -1,0 +1,1 @@
+"""Calendar source adapters."""

@@ -1,0 +1,51 @@
+.settings-main { width: min(1120px, 100%); }
+.settings-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.save-state { margin: 0 0 7px; color: var(--muted); font-size: 13px; }
+.notice { margin-bottom: 18px; padding: 12px 15px; border-left: 4px solid var(--tentative); background: #fff8e8; font-size: 13px; }
+.error-notice { border-left-color: var(--busy); background: #fff4f1; white-space: pre-wrap; }
+.settings-section { padding: 28px 0 34px; border-top: 1px solid var(--line); }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+.section-kicker { margin: 0 0 4px; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 27px; font-weight: 500; }
+.field-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 18px 20px; }
+label { min-width: 0; }
+label > span, .calendar-row label > span { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+input { width: 100%; height: 40px; padding: 0 11px; border: 1px solid #bec9c7; border-radius: 4px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; }
+input:focus { border-color: var(--focus); outline: 3px solid rgba(23, 79, 104, 0.14); }
+small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+.secondary-button, .danger-button, .remove-button { min-height: 36px; padding: 0 13px; border: 1px solid #bec9c7; border-radius: 5px; background: var(--paper); cursor: pointer; font-weight: 700; font-size: 12px; }
+.danger-button { color: #a53425; border-color: #e4bcb5; }
+.remove-button { width: 36px; padding: 0; align-self: end; font-size: 20px; }
+.calendar-list { display: grid; gap: 10px; }
+.calendar-list:empty::after { content: "No calendars configured"; display: block; padding: 22px 0; color: var(--muted); font-size: 13px; border-top: 1px dashed var(--line); }
+.calendar-row { display: grid; grid-template-columns: minmax(150px, 0.8fr) minmax(240px, 1.5fr) 120px 36px; gap: 12px; align-items: start; padding: 14px 0; border-top: 1px solid var(--line); }
+.provider-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+.provider-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.provider-status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+.provider-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.provider-status.connected::before { background: var(--free); }
+.provider-status.configured::before { background: var(--tentative); }
+.switch, .toggle-field { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font-size: 13px; font-weight: 700; }
+.switch input, .toggle-field input { width: 18px; height: 18px; margin: 0; accent-color: var(--focus); }
+.switch span, .toggle-field span { margin: 0; color: inherit; font-size: inherit; text-transform: none; }
+.provider-body.disabled { display: none; }
+.tenant-field { grid-template-columns: minmax(240px, 380px); margin-bottom: 18px; }
+details { margin-top: 20px; border-top: 1px dashed var(--line); padding-top: 16px; }
+summary { cursor: pointer; color: var(--focus); font-size: 13px; font-weight: 700; }
+.policy-grid { margin-top: 18px; }
+.toggle-field { align-self: center; min-height: 40px; }
+
+@media (max-width: 820px) {
+  .field-grid { grid-template-columns: 1fr 1fr; }
+  .calendar-row { grid-template-columns: 1fr 1fr 100px 36px; }
+}
+
+@media (max-width: 620px) {
+  .settings-heading { align-items: flex-start; flex-direction: column; }
+  .field-grid, .calendar-row { grid-template-columns: 1fr; }
+  .calendar-row { position: relative; padding-right: 48px; }
+  .remove-button { position: absolute; right: 0; top: 14px; }
+  .provider-bar { align-items: flex-start; flex-direction: column; }
+  .provider-actions { width: 100%; }
+  .provider-actions button { flex: 1; }
+}

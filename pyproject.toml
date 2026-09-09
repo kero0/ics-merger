@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ics-merger"
+version = "0.1.0"
+description = "A local service that merges remote ICS, Google, and Microsoft 365 calendars"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "authlib>=1.6,<2",
+    "fastapi>=0.115,<1",
+    "httpx2>=2.12,<3",
+    "icalendar>=6.1,<8",
+    "PyYAML>=6.0.2,<7",
+    "python-dotenv>=1.0,<2",
+    "uvicorn>=0.34,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.14,<2",
+    "pytest>=8.3,<10",
+    "pytest-asyncio>=0.25,<2",
+    "ruff>=0.9,<1",
+    "types-authlib>=1.6,<2",
+    "types-PyYAML>=6.0.12,<7",
+    "types-vobject>=0.9.9,<1",
+    "vobject>=0.9.9,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ics_merger"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["ics_merger"]
