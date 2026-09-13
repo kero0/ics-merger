@@ -86,7 +86,7 @@ class CalendarMerger:
         self._source_states: list[_SourceState] | None = None
         self._refresh_tasks: list[asyncio.Task[None]] = []
         self._revision = 0
-        self._render_cache: dict[SourceLabel, _RenderedSnapshot] = {}
+        self._render_cache: dict[tuple[SourceLabel, bool], _RenderedSnapshot] = {}
 
     async def start(self, sources: Sequence[CalendarSource]) -> None:
         if self._source_states is not None:
@@ -118,13 +118,16 @@ class CalendarMerger:
         self,
         sources: Sequence[CalendarSource] | None = None,
         source_label: SourceLabel = SourceLabel.NONE,
+        *,
+        include_history: bool = False,
     ) -> MergeResult:
+        cache_key = (source_label, include_history)
         if sources is None:
             if self._source_states is None:
                 raise RuntimeError("Calendar merger has not been started")
             states = tuple(self._source_states)
             current = self._now()
-            cached = self._render_cache.get(source_label)
+            cached = self._render_cache.get(cache_key)
             if (
                 cached is not None
                 and cached.revision == self._revision
@@ -165,9 +168,12 @@ class CalendarMerger:
                 components.append(event)
         active_components = _remove_ended_events(components, current)
         expires_at = _next_expiry(active_components, current)
-        resolved_components = _remove_ended_events(
-            _resolve_availability(active_components, self._include_free_time), current
+        retained_components = components if include_history else active_components
+        resolved_components = _resolve_availability(
+            retained_components, self._include_free_time
         )
+        if not include_history:
+            resolved_components = _remove_ended_events(resolved_components, current)
         resolved_components.sort(key=_component_sort_key)
         for component in resolved_components:
             merged.add_component(component)
@@ -178,7 +184,7 @@ class CalendarMerger:
             failed_source_count=failed_count,
         )
         if sources is None:
-            self._render_cache[source_label] = _RenderedSnapshot(
+            self._render_cache[cache_key] = _RenderedSnapshot(
                 revision=self._revision,
                 generated_at=current,
                 expires_at=expires_at,

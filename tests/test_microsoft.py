@@ -152,7 +152,7 @@ async def test_microsoft_pagination_and_deterministic_conversion(tmp_path: Path)
     assert len(calls) == 2
     assert calls[0][0] == "https://graph.microsoft.com/v1.0/me/calendarView"
     assert calls[0][1] is not None
-    assert calls[0][1]["startDateTime"] == "2026-09-05T12:00:00Z"
+    assert calls[0][1]["startDateTime"] == "2026-08-22T12:00:00Z"
     assert calls[0][1]["endDateTime"] == "2026-09-19T12:00:00Z"
     assert calls[0][2] == {"Prefer": 'outlook.timezone="UTC"'}
     assert calls[1][0] == next_link and calls[1][1] is None

@@ -99,7 +99,6 @@ function render() {
   const firstDay = addDays(today, state.page * 7);
   const lastDay = addDays(firstDay, 6);
   rangeTitle.textContent = `${rangeFormatter.format(firstDay)} - ${rangeFormatter.format(lastDay)}`;
-  previousButton.disabled = state.page === 0;
   calendar.replaceChildren();
 
   let visibleCount = 0;
@@ -192,7 +191,7 @@ document.querySelector("#filters").addEventListener("click", (event) => {
   render();
 });
 
-previousButton.addEventListener("click", () => { state.page = Math.max(0, state.page - 1); render(); });
+previousButton.addEventListener("click", () => { state.page -= 1; render(); });
 document.querySelector("#today").addEventListener("click", () => { state.page = 0; render(); });
 document.querySelector("#next").addEventListener("click", () => { state.page += 1; render(); });
 refreshButton.addEventListener("click", loadCalendar);

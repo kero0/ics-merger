@@ -53,6 +53,19 @@ END:VEVENT\r
 END:VCALENDAR\r
 """
 
+PAST_ICS = b"""BEGIN:VCALENDAR\r
+VERSION:2.0\r
+PRODID:-//Past Source//EN\r
+BEGIN:VEVENT\r
+UID:past-event\r
+DTSTAMP:20240101T000000Z\r
+DTSTART:20241201T090000Z\r
+DTEND:20241201T100000Z\r
+SUMMARY:Past event\r
+END:VEVENT\r
+END:VCALENDAR\r
+"""
+
 
 async def public_resolver(
     hostname: str, port: int
@@ -125,6 +138,8 @@ async def test_root_serves_calendar_ui_and_old_routes_are_not_available() -> Non
     assert 'href="/api/calendars/merged.ics"' in response.text
     assert 'href="/settings"' in response.text
     assert 'new URLSearchParams(window.location.search).get("source_label")' in script.text
+    assert "state.page -= 1" in script.text
+    assert "Math.max(0, state.page - 1)" not in script.text
     assert 'calendarUrl("/api/calendars/merged.json")' in script.text
     assert 'calendarUrl("/api/calendars/merged.ics")' in script.text
     assert styles.status_code == 200
@@ -235,7 +250,7 @@ async def test_json_calendar_reports_sources_and_browser_events() -> None:
     app, source_client = build_app(
         httpx.MockTransport(
             lambda _: httpx.Response(
-                200, headers={"content-type": "text/calendar"}, content=FIRST_ICS
+                200, headers={"content-type": "text/calendar"}, content=PAST_ICS
             )
         ),
         ["https://calendar.example/calendar.ics"],
@@ -247,7 +262,7 @@ async def test_json_calendar_reports_sources_and_browser_events() -> None:
     payload = response.json()
     assert payload["sourceCount"] == 1
     assert payload["failedSourceCount"] == 0
-    assert isinstance(payload["events"], list)
+    assert [event["title"] for event in payload["events"]] == ["Past event"]
     assert payload["generatedAt"].endswith("+00:00")
 
 

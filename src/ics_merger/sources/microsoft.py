@@ -31,7 +31,7 @@ class MicrosoftCalendarSource(ProviderCalendarSource):
     async def _fetch_events(self, client: OAuthClient, now: datetime) -> list[NormalizedEvent]:
         url = self._initial_url()
         params: dict[str, str] | None = {
-            "startDateTime": utc_parameter(now),
+            "startDateTime": utc_parameter(now - timedelta(days=self._horizon_days)),
             "endDateTime": utc_parameter(now + timedelta(days=self._horizon_days)),
             "$top": "1000",
             "$select": (

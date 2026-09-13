@@ -68,9 +68,14 @@ class RuntimeManager:
             self._settings = settings
             await previous.merger.stop()
 
-    async def merge(self, source_label: SourceLabel) -> MergeResult:
+    async def merge(
+        self, source_label: SourceLabel, *, include_history: bool = False
+    ) -> MergeResult:
         async with self._lock:
-            return await self._required_bundle().merger.merge(source_label=source_label)
+            return await self._required_bundle().merger.merge(
+                source_label=source_label,
+                include_history=include_history,
+            )
 
     async def authorization_url(self, provider: str) -> str:
         async with self._lock:

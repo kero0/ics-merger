@@ -450,6 +450,33 @@ async def test_events_ended_by_the_present_are_removed_before_merging() -> None:
 
 
 @pytest.mark.asyncio
+async def test_history_can_be_included_for_calendar_view() -> None:
+    calendar = Calendar()
+    _add_property(calendar, "version", "2.0")
+    calendar.add_component(
+        _event(
+            "expired",
+            datetime(2026, 9, 4, 8, tzinfo=UTC),
+            datetime(2026, 9, 4, 9, tzinfo=UTC),
+        )
+    )
+    calendar.add_component(
+        _event(
+            "future",
+            datetime(2026, 9, 6, 8, tzinfo=UTC),
+            datetime(2026, 9, 6, 9, tzinfo=UTC),
+        )
+    )
+
+    result = await CalendarMerger(
+        now=lambda: datetime(2026, 9, 5, 12, tzinfo=UTC), include_free_time=False
+    ).merge([StaticSource(calendar)], include_history=True)
+
+    events = _walk_components(Calendar.from_ical(result.content), "VEVENT")
+    assert {str(event["SUMMARY"]) for event in events} == {"expired", "future"}
+
+
+@pytest.mark.asyncio
 async def test_source_names_namespace_uids_and_optionally_label_events() -> None:
     first_calendar = Calendar()
     first_calendar.add_component(

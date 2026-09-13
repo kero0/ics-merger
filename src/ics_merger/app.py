@@ -22,7 +22,7 @@ from ics_merger.runtime import RuntimeManager
 from ics_merger.sources.remote_ics import AddressResolver
 from ics_merger.sources.remote_ics import resolve_addresses as default_resolver
 from ics_merger.token_store import TokenStoreError
-from ics_merger.web_calendar import future_web_events
+from ics_merger.web_calendar import web_events
 
 _WEB_DIRECTORY = Path(__file__).with_name("web")
 
@@ -244,10 +244,15 @@ def create_app(
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         return {"connected": False, "removed": removed}
 
-    async def merge_sources(request: Request, source_label: SourceLabel) -> MergeResult:
+    async def merge_sources(
+        request: Request,
+        source_label: SourceLabel,
+        *,
+        include_history: bool = False,
+    ) -> MergeResult:
         manager: RuntimeManager = request.app.state.runtime
         try:
-            return await manager.merge(source_label)
+            return await manager.merge(source_label, include_history=include_history)
         except AllSourcesFailedError as exc:
             raise HTTPException(
                 status_code=503,
@@ -274,7 +279,7 @@ def create_app(
         request: Request,
         source_label: Annotated[SourceLabel, Query()] = SourceLabel.NONE,
     ) -> JSONResponse:
-        result = await merge_sources(request, source_label)
+        result = await merge_sources(request, source_label, include_history=True)
         clock: Callable[[], datetime] = request.app.state.now
         current = clock().astimezone(UTC)
         return JSONResponse(
@@ -282,7 +287,7 @@ def create_app(
                 "generatedAt": current.isoformat(),
                 "sourceCount": result.source_count,
                 "failedSourceCount": result.failed_source_count,
-                "events": future_web_events(result.content, current),
+                "events": web_events(result.content),
             }
         )
 

@@ -158,7 +158,7 @@ async def test_google_pagination_and_deterministic_conversion(tmp_path: Path) ->
     assert len(calls) == 2
     assert calls[0][0].endswith("/team%2Fcalendar%40example.com/events")
     assert calls[0][1] is not None
-    assert calls[0][1]["timeMin"] == "2026-09-05T12:00:00Z"
+    assert calls[0][1]["timeMin"] == "2026-08-06T12:00:00Z"
     assert calls[0][1]["timeMax"] == "2026-10-05T12:00:00Z"
     assert calls[1][1] is not None and calls[1][1]["pageToken"] == "next-page"
     events = {str(event["UID"]): event for event in _walk_components(calendar, "VEVENT")}

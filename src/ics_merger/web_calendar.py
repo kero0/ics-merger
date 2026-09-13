@@ -22,6 +22,10 @@ class WebCalendarEvent(TypedDict):
     location: str | None
 
 
+def web_events(content: bytes) -> list[WebCalendarEvent]:
+    return list(_project_web_events(content))
+
+
 def future_web_events(content: bytes, now: datetime) -> list[WebCalendarEvent]:
     current = now.astimezone(UTC)
     return [

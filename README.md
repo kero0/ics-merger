@@ -40,7 +40,8 @@ schema.
 
 - `server`: bind `host`, bind `port`, and externally visible `public_base_url` used for OAuth
   callbacks.
-- `calendar`: provider `future_horizon_days`, from 1 through 366, and `include_free_time`.
+- `calendar`: provider `future_horizon_days`, from 1 through 366 days before and after today,
+  and `include_free_time`.
 - `remote_ics`: named feed `calendars`, private-network policy, response limit, and
    connect/read/write/pool timeout seconds.
 - `env_file`: credential file required when Google or Microsoft is enabled.

@@ -34,7 +34,7 @@ class GoogleCalendarSource(ProviderCalendarSource):
             "singleEvents": "true",
             "showDeleted": "false",
             "orderBy": "startTime",
-            "timeMin": utc_parameter(now),
+            "timeMin": utc_parameter(now - timedelta(days=self._horizon_days)),
             "timeMax": utc_parameter(now + timedelta(days=self._horizon_days)),
             "maxResults": "2500",
         }
