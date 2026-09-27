@@ -5,12 +5,19 @@ from urllib.parse import parse_qs, urlencode, urlparse
 
 import httpx2 as httpx
 import pytest
+from authlib.integrations.base_client.errors import OAuthError
 from fastapi import FastAPI
 from pydantic import SecretStr
 
 from ics_merger.app import create_app
 from ics_merger.config import Settings
-from ics_merger.oauth import OAuthProviderConfig, TokenUpdate
+from ics_merger.oauth import (
+    AuthlibOAuthClient,
+    OAuthClientError,
+    OAuthProviderConfig,
+    TokenUpdate,
+    provider_config,
+)
 from ics_merger.oauth_state import OAuthTransaction
 from ics_merger.token_store import Token, TokenStore
 
@@ -216,6 +223,29 @@ async def test_callback_without_code_consumes_state(tmp_path: Path) -> None:
     assert missing.status_code == 400
     assert missing.json() == {"detail": "Authorization code is missing"}
     assert replay.json() == {"detail": "Invalid authorization state"}
+
+
+@pytest.mark.asyncio
+async def test_authlib_oauth_error_is_sanitized_by_provider_client() -> None:
+    config = provider_config(configured_settings(Path("/tmp")), "google")
+    assert config is not None
+    client = AuthlibOAuthClient(config)
+
+    class InvalidGrantClient:
+        async def get(self, *args: object, **kwargs: object) -> httpx.Response:
+            del args, kwargs
+            raise OAuthError("invalid_grant")
+
+        async def aclose(self) -> None:
+            pass
+
+    client._client = InvalidGrantClient()  # type: ignore[assignment]
+    try:
+        with pytest.raises(OAuthClientError) as error:
+            await client.get("https://www.googleapis.com/calendar/v3/calendars/primary/events")
+        assert error.value.reauthorization_required
+    finally:
+        await client.close()
 
 
 @pytest.mark.asyncio

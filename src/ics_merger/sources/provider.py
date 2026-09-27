@@ -57,6 +57,11 @@ class ProviderCalendarSource(ABC):
         except SourceError:
             raise
         except OAuthClientError as exc:
+            if exc.reauthorization_required:
+                try:
+                    self._token_store.delete(self.provider)
+                except TokenStoreError:
+                    pass
             raise SourceError(SourceErrorCode.AUTH_REQUIRED) from exc
         except httpx2.HTTPError as exc:
             raise SourceError(SourceErrorCode.PROVIDER_FETCH_FAILED) from exc

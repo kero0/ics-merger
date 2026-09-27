@@ -77,6 +77,9 @@ class OAuthExchangeError(Exception):
 class OAuthClientError(Exception):
     """An OAuth client failure without provider-specific details."""
 
+    def __init__(self, *, reauthorization_required: bool = False) -> None:
+        self.reauthorization_required = reauthorization_required
+
 
 class AuthlibOAuthClient:
     def __init__(
@@ -85,12 +88,12 @@ class AuthlibOAuthClient:
         token: Token | None = None,
         token_update: TokenUpdate | None = None,
     ) -> None:
+        from authlib.common.errors import AuthlibBaseError
         from authlib.integrations.httpx_client import AsyncOAuth2Client
-        from authlib.oauth2 import OAuth2Error
 
         self._config = config
         self._token_update = token_update
-        self._oauth_error: type[Exception] = OAuth2Error
+        self._oauth_error: type[Exception] = AuthlibBaseError
         self._client = AsyncOAuth2Client(
             client_id=config.client_id,
             client_secret=config.client_secret,
@@ -144,7 +147,9 @@ class AuthlibOAuthClient:
             http_client = cast(httpx2.AsyncClient, self._client)
             return await http_client.get(url, params=params, headers=headers)
         except self._oauth_error as exc:
-            raise OAuthClientError from exc
+            raise OAuthClientError(
+                reauthorization_required=getattr(exc, "error", None) == "invalid_grant"
+            ) from exc
 
     async def close(self) -> None:
         await cast(httpx2.AsyncClient, self._client).aclose()

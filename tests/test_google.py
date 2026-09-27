@@ -9,7 +9,8 @@ from icalendar.cal import Component
 from pydantic import SecretStr
 
 from ics_merger.config import Settings
-from ics_merger.oauth import OAuthProviderConfig, TokenUpdate, provider_config
+from ics_merger.merge import CalendarMerger
+from ics_merger.oauth import OAuthClientError, OAuthProviderConfig, TokenUpdate, provider_config
 from ics_merger.oauth_state import OAuthTransaction
 from ics_merger.sources.errors import SourceError, SourceErrorCode
 from ics_merger.sources.google import GoogleCalendarSource
@@ -33,9 +34,15 @@ def event_time(event: Component, name: str) -> date | datetime:
 
 
 class ScriptedClient:
-    def __init__(self, responses: list[httpx.Response], token_update: TokenUpdate | None) -> None:
+    def __init__(
+        self,
+        responses: list[httpx.Response],
+        token_update: TokenUpdate | None,
+        failure: Exception | None = None,
+    ) -> None:
         self.responses = responses
         self.token_update = token_update
+        self.failure = failure
         self.calls: list[tuple[str, Mapping[str, str] | None]] = []
 
     def create_authorization_url(
@@ -57,6 +64,8 @@ class ScriptedClient:
     ) -> httpx.Response:
         del headers
         self.calls.append((url, params))
+        if self.failure is not None:
+            raise self.failure
         if len(self.calls) == 1 and self.token_update is not None:
             await self.token_update(
                 {"access_token": "rotated-access", "refresh_token": "rotated-refresh"}
@@ -68,8 +77,9 @@ class ScriptedClient:
 
 
 class ScriptedFactory:
-    def __init__(self, responses: list[httpx.Response]) -> None:
+    def __init__(self, responses: list[httpx.Response], failure: Exception | None = None) -> None:
         self.responses = responses
+        self.failure = failure
         self.client: ScriptedClient | None = None
 
     def __call__(
@@ -79,7 +89,7 @@ class ScriptedFactory:
         token_update: TokenUpdate | None = None,
     ) -> ScriptedClient:
         del config, token
-        self.client = ScriptedClient(self.responses, token_update)
+        self.client = ScriptedClient(self.responses, token_update, self.failure)
         return self.client
 
 
@@ -197,3 +207,19 @@ async def test_google_missing_token_is_auth_required(tmp_path: Path) -> None:
     with pytest.raises(SourceError, match=SourceErrorCode.AUTH_REQUIRED):
         await source.fetch()
     assert factory.client is None
+
+
+@pytest.mark.asyncio
+async def test_google_invalid_grant_invalidates_token_and_does_not_abort_startup(
+    tmp_path: Path,
+) -> None:
+    source, store, factory = build_source(tmp_path, [])
+    factory.failure = OAuthClientError(reauthorization_required=True)
+
+    with pytest.raises(SourceError, match=SourceErrorCode.AUTH_REQUIRED):
+        await source.fetch()
+
+    assert store.get("google") is None
+    merger = CalendarMerger()
+    await merger.start([source])
+    await merger.stop()
